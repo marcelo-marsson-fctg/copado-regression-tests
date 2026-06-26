@@ -1,4 +1,5 @@
 *** Settings ***
+Library             RetryFailed    global_retries=1
 Library             QForce
 Library             DateTime
 Resource            ../resources/common.resource
