@@ -171,7 +171,11 @@ def scan_robot_files(repo: Path) -> Dict:
     confirm: Dict[tuple, int] = {}   # {(filename, tcid): flag count}
     names_by_file: Dict[str, List[str]] = {}
     shared_confirm: Dict[str, int] = {}
-    for path in sorted((repo / "tests").glob("*.robot")):
+    # The Service/Case suite lives in the standalone service/ subrepo, the rest under tests/.
+    # Matching is by basename, so both directories feed the same per-file scan.
+    robot_files = sorted((repo / "tests").glob("*.robot")) + \
+        sorted((repo / "service" / "tests").glob("*.robot"))
+    for path in robot_files:
         fname = path.name
         names_by_file.setdefault(fname, [])
         text = path.read_text(encoding="utf-8", errors="replace")
