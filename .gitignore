@@ -23,5 +23,5 @@ venv/
 .env
 secrets*.yaml
 
-#Folders of separate git repos
-./service
+# Folders of separate git repos
+/service/
