@@ -1,8 +1,8 @@
 *** Settings ***
 Library             QForce
-Resource            ../resources/common.resource
+# Resource            ../resources/common.resource
 Suite Setup         Setup Browser
-Suite Teardown      End suite
+Suite Teardown      End suite 
 
 
 *** Variables ***

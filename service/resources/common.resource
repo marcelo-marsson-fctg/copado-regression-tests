@@ -1,5 +1,5 @@
 *** Variables ***
-${BROWSER}                chrome
+${BROWSER}                chrome 
 
 
 *** Keywords ***

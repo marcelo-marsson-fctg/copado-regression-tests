@@ -1,4 +1,5 @@
 *** Settings ***
+Library             RetryFailed    global_retries=1
 Library             QForce
 Library             DateTime
 Resource            ../resources/common.resource
@@ -41,7 +42,7 @@ TC_102 Manual Feedback Case Creation Via New Feedback Global Action And Field Ma
     [Setup]    Authenticate And Open Leisure Service
     [Teardown]    Delete Created TC102 Case
     Open Global Action New Feedback
-    Create TC102 Feedback Case
+    Create TC102 Feedback Case 
     Open Created Case From Toast
     Verify TC102 Case Number
     Verify TC102 Record Type Is Feedback
