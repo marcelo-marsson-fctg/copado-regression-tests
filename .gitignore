@@ -21,6 +21,8 @@ venv/
 *.key
 *.pem
 .env
+.copado.env
+automation/.copado.env
 secrets*.yaml
 
 # Folders of separate git repos

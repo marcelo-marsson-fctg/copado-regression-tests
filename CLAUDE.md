@@ -181,7 +181,8 @@ Create New Account
 - "Type X into Y field" → `TypeText    Y    X`
 - "Verify X appears" → `VerifyText    X`
 - "Verify X is not present" → `VerifyNoText    X`
-- "Navigate to URL" → `GoTo    ${login_url}lightning/...`
+- "Open / go to the X app", "navigate to the X app", "launch X" → `LaunchApp    X` — opens the app via the Salesforce **App Launcher** (the waffle). This is the preferred, much simpler way to reach an app: **prefer it over** building a `GoTo    ${login_url}lightning/...` URL or clicking through the App Launcher manually. Use the exact app name (e.g. `LaunchApp    Leisure Service`, `LaunchApp    Sales`). For the home page use `LaunchApp    Home`. Optionally verify a tab after launch: `LaunchApp    Sales    Opportunities`. See `LaunchApp` in `resources/QForce_Reference.md` for `connected_app`/`index` args.
+- "Navigate to a raw URL" → `GoTo    ${login_url}lightning/...` (only when there is no app to launch — e.g. a deep link or a record page; otherwise prefer `LaunchApp`)
 - "Select X from a Salesforce Lightning picklist" → `PickList    field_label    X` — **NOT `DropDown`**. Lightning picklists are comboboxes, not native `<select>` elements, so `DropDown` fails with "Unable to find element for locator". `DropDown` is only for true HTML `<select>` elements (rare in Lightning). For type-ahead lookup fields use `Combobox`. See `resources/QForce_Reference.md`.
 - "Verify field value" → `VerifyInputValue    field_label    expected_value` (for a saved record layout field, prefer `VerifyField    label    expected`)
 - Login/setup → call `Login` keyword from common.resource
@@ -205,7 +206,9 @@ Always tag test cases. Common tags:
 
 ```robot
 # Navigation
-GoTo                url
+LaunchApp           App Name                # open an app via the App Launcher (preferred)
+LaunchApp           App Name    Tab Name    # also verify a tab after launch
+GoTo                url                      # raw URL nav — use only when there's no app to launch
 VerifyTitle         Expected Page Title
 
 # Text interaction
@@ -238,6 +241,7 @@ ClickElement        xpath=//button[@data-id='submit']
 
 - Salesforce pages are slow — the default 30s timeout in `Setup Browser` usually covers it, but add `timeout=60s` to specific keywords on heavy pages
 - Lightning UI uses shadow DOM — prefer `ClickText`/`TypeText` (text-based) over CSS selectors; `SetConfig    CSSSelectors    False` is already set in `Setup Browser`
+- To reach an app, use `LaunchApp    <App Name>` (App Launcher) rather than a hardcoded `GoTo` URL — it's simpler, org-portable, and survives URL changes. This is how `Login`/`Home` in `service/resources/common.resource` navigate (`LaunchApp    Home`), and how suites open their app (`LaunchApp    Leisure Service`).
 - After navigating, wait for a known element before interacting: `VerifyText    Account Name`
 - For list views, use `ClickText` on the row text then verify the detail page title
 
