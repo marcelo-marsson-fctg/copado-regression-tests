@@ -92,8 +92,12 @@ POLL_INTERVAL = int(CFG.get("POLL_INTERVAL", "15"))
 POLL_TIMEOUT = int(CFG.get("POLL_TIMEOUT", "1800"))
 
 JOBS_EP = "/pace/v4/projects/{project}/jobs"
+JOB_EP = "/pace/v4/projects/{project}/jobs/{job}"
 BUILDS_EP = "/pace/v4/projects/{project}/jobs/{job}/builds"
 BUILD_EP = "/pace/v4/projects/{project}/jobs/{job}/builds/{build}"
+
+# Stable branch the job is restored to after a --branch run.
+MAIN_BRANCH = CFG.get("COPADO_MAIN_BRANCH", "main")
 
 DONE = {"succeeded", "success", "passed", "failed", "failure", "error", "aborted",
         "cancelled", "canceled", "stopped", "timeout", "completed", "done", "finished"}
@@ -156,8 +160,32 @@ def cmd_discover(_a) -> int:
     return 0
 
 
-def cmd_trigger(_a) -> int:
+def _get_job() -> dict:
+    st, resp = request("GET", JOB_EP.format(project=PROJECT, job=JOB))
+    if st != 200:
+        sys.exit(f"Could not fetch job {JOB} (HTTP {st}): {resp}")
+    return _data(resp)
+
+
+def _set_job_branch(branch: str) -> None:
+    """Point the job's git storage at `branch` (PUT keeps everything else intact)."""
+    job = _get_job()
+    current = (job.get("storage") or {}).get("branchOrTag", {}).get("branch")
+    if current == branch:
+        return
+    job["storage"]["branchOrTag"] = {"branch": branch}
+    payload = {k: job[k] for k in ("name", "description", "parallelExecution", "storage",
+                                   "suiteType", "robotId", "timeout", "showVideoParams") if k in job}
+    st, resp = request("PUT", JOB_EP.format(project=PROJECT, job=JOB), body=payload)
+    if st != 200:
+        sys.exit(f"Could not switch job {JOB} to branch {branch!r} (HTTP {st}): {resp}")
+    print(f"Job {JOB} now runs branch {branch!r}")
+
+
+def cmd_trigger(a) -> int:
     _require("BASE_URL", "PAT", "PROJECT", "JOB")
+    if getattr(a, "branch", None):
+        _set_job_branch(a.branch)
     st, resp = request("POST", BUILDS_EP.format(project=PROJECT, job=JOB), body={})
     if st is None or not (200 <= st < 300):
         sys.exit(f"Trigger failed (HTTP {st}): {resp}")
@@ -217,10 +245,16 @@ def _poll(build_id) -> str:
 
 def cmd_run(a) -> int:
     build_id = cmd_trigger(a)
-    state = _poll(build_id)
-    out = _download_output(build_id)
-    if out:
-        summarize(out)
+    try:
+        state = _poll(build_id)
+        out = _download_output(build_id)
+        if out:
+            summarize(out)
+    finally:
+        # A --branch run is a one-off: always restore the job to the stable branch so the
+        # next plain `run` (or a teammate's UI trigger) executes the real suite.
+        if getattr(a, "branch", None) and a.branch != MAIN_BRANCH:
+            _set_job_branch(MAIN_BRANCH)
     return 1 if state in FAIL else 0
 
 
@@ -232,6 +266,40 @@ def cmd_fetch(a) -> int:
 
 def cmd_parse(a) -> int:
     return 0 if summarize(Path(a.path)) else 1
+
+
+def cmd_lint(a) -> int:
+    """Parse .robot/.resource files locally and report syntax errors — catches typos
+    before they cost a full CRT cloud round-trip. Needs `pip install robotframework`
+    (parse only; QForce/QWeb keywords are not resolved)."""
+    try:
+        from robot.api import get_model, get_resource_model
+        from robot.parsing.model.visitor import ModelVisitor
+    except ImportError:
+        sys.exit("robotframework is not installed locally: pip3 install --user robotframework")
+
+    root = Path(a.path) if a.path else REPO_ROOT / "service"
+    files = [root] if root.is_file() else sorted(
+        list(root.rglob("*.robot")) + list(root.rglob("*.resource")))
+    problems = []
+
+    class Collector(ModelVisitor):
+        def __init__(self, path):
+            self.path = path
+
+        def visit_Error(self, node):
+            for err in node.errors:
+                problems.append(f"{self.path}:{node.lineno}: {err}")
+
+    for f in files:
+        model = get_resource_model(str(f)) if f.suffix == ".resource" else get_model(str(f))
+        Collector(f).visit(model)
+    if problems:
+        print("\n".join(problems))
+        print(f"\n{len(problems)} problem(s) in {len(files)} file(s)")
+        return 1
+    print(f"OK — {len(files)} file(s) parse cleanly")
+    return 0
 
 
 def summarize(output_xml: Path) -> bool:
@@ -264,15 +332,24 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("discover", help="list jobs for the project")
-    sub.add_parser("trigger", help="start a build, print run id")
+    p_t = sub.add_parser("trigger", help="start a build, print run id")
+    p_t.add_argument("--branch", help="switch the job to this git branch before triggering (NOT restored)")
     p_s = sub.add_parser("status", help="print build state"); p_s.add_argument("build_id")
-    sub.add_parser("run", help="trigger -> poll -> fetch output.xml -> summarize")
+    p_r = sub.add_parser("run", help="trigger -> poll -> fetch output.xml -> summarize")
+    p_r.add_argument("--branch", help="run this git branch (e.g. dev for isolated in-development "
+                     "suites); the job is restored to the stable branch afterwards")
+    p_b = sub.add_parser("set-branch", help="point the job at a git branch and exit")
+    p_b.add_argument("branch")
     p_f = sub.add_parser("fetch", help="download+summarize an existing build"); p_f.add_argument("build_id")
     p_p = sub.add_parser("parse", help="summarize a local output.xml"); p_p.add_argument("path")
+    p_l = sub.add_parser("lint", help="parse .robot/.resource files locally, report syntax errors")
+    p_l.add_argument("path", nargs="?", help="file or directory (default: service/)")
     args = ap.parse_args(argv)
     return {
         "discover": cmd_discover, "trigger": lambda a: (cmd_trigger(a), 0)[1],
-        "status": cmd_status, "run": cmd_run, "fetch": cmd_fetch, "parse": cmd_parse,
+        "status": cmd_status, "run": cmd_run, "fetch": cmd_fetch, "parse": cmd_parse, "lint": cmd_lint,
+        "set-branch": lambda a: (_require("BASE_URL", "PAT", "PROJECT", "JOB"),
+                                 _set_job_branch(a.branch), 0)[2],
     }[args.cmd](args)
 
 
