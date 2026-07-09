@@ -245,16 +245,25 @@ def _poll(build_id) -> str:
 
 def cmd_run(a) -> int:
     build_id = cmd_trigger(a)
+    state = ""
     try:
         state = _poll(build_id)
         out = _download_output(build_id)
         if out:
             summarize(out)
     finally:
-        # A --branch run is a one-off: always restore the job to the stable branch so the
-        # next plain `run` (or a teammate's UI trigger) executes the real suite.
+        # A --branch run is a one-off: restore the job to the stable branch so the next
+        # plain `run` (or a teammate's UI trigger) executes the real suite. BUT a build
+        # only clones its branch when it STARTS executing — if this build is still queued
+        # (e.g. the poll timed out behind another build), restoring now would make it run
+        # the wrong suite. In that case leave the branch alone and say so.
         if getattr(a, "branch", None) and a.branch != MAIN_BRANCH:
-            _set_job_branch(MAIN_BRANCH)
+            current = (_build(build_id).get("status") or "").lower()
+            if current in DONE or current == "executing":
+                _set_job_branch(MAIN_BRANCH)
+            else:
+                print(f"! build {build_id} is still {current or 'pending'} — leaving the job on "
+                      f"branch {a.branch!r}. Restore later with: run_suite.py set-branch {MAIN_BRANCH}")
     return 1 if state in FAIL else 0
 
 
