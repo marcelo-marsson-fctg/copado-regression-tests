@@ -16,24 +16,25 @@ deployment quality gate. The full suite takes ~3h, so a 01:00 start finishes ~04
 | `../run_suite.py` | Harness (`run --publish`, `publish`, `trigger`, …). |
 | `../zephyr_slb_mapping.csv` | `TC → SLB-T<n>` reference. |
 
-## Choose a scheduling model
+## Scheduling — Copado scheduled Function (chosen)
 
-### Option A — one scheduled job (recommended for cron / a long-running scheduler)
-A single job at 01:00 runs `nightly_regression.sh`, which triggers the CRT run, waits for
-it to finish, and publishes. Simplest, fully self-contained.
+A single **Copado Function** runs `nightly_regression.sh` on a **nightly 01:00 schedule**.
+Copado Functions have no execution-time limit here, so the one Function triggers the CRT run,
+waits ~3h for it to finish, and publishes — self-contained, one moving part.
 
-- **cron:** `0 1 * * *  /path/to/repo/automation/copado/nightly_regression.sh >> /var/log/crt-nightly.log 2>&1`
-- **Copado scheduled Function:** only if the Function can run ~3–4h (check the container
-  execution-time limit). Image with `python3`+`bash`; script `bash automation/copado/nightly_regression.sh`.
+| Function field | Value |
+|----------------|-------|
+| **API Name** | `Nightly_CRT_Regression_To_Zephyr` |
+| **Type / Image** | Custom · container with `python3` + `bash` (e.g. `python:3.12-slim`; no pip install) |
+| **Script** | `bash automation/copado/nightly_regression.sh` |
+| **Working dir** | the checked-out `copado-regression-tests` repo (add a `git clone` at the top of the script if your Function doesn't auto-checkout) |
+| **Schedule** | nightly `0 1 * * *` — via a Copado scheduled Automation / scheduled job that invokes this Function (confirm the exact scheduling UI in your edition) |
 
-### Option B — two steps (use if your scheduler caps job duration, e.g. short Functions)
-Decouple the trigger from the publish so neither runs for hours:
+Optional inputs: `CYCLE_NAME`, `JIRA_VERSION_ID`, `POLL_TIMEOUT` (default 6h). Secrets below.
 
-1. **01:00 — trigger the tests.** Use CRT's own **Schedule** on the "Service" job to run
-   nightly at 01:00 (Copado Robotic Testing → the job → Schedule). No custom code.
-2. **~04:30 — publish.** A short scheduled Function (or cron) runs `publish_to_zephyr.sh`,
-   which finds the newest *finished* build and posts it to Zephyr. Exits cleanly if the run
-   isn't done yet.
+### Fallback (only if you ever need it)
+Decoupled: use CRT's own **Schedule** on the "Service" job to fire the tests at 01:00, then a
+separate short job at ~04:30 runs `publish_to_zephyr.sh` (publishes the newest *finished* build).
 
 ## Secrets / config (env — Copado credentials, never in git)
 
