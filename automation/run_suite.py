@@ -246,6 +246,7 @@ def _poll(build_id) -> str:
 def cmd_run(a) -> int:
     build_id = cmd_trigger(a)
     state = ""
+    out = None
     try:
         state = _poll(build_id)
         out = _download_output(build_id)
@@ -264,6 +265,12 @@ def cmd_run(a) -> int:
             else:
                 print(f"! build {build_id} is still {current or 'pending'} — leaving the job on "
                       f"branch {a.branch!r}. Restore later with: run_suite.py set-branch {MAIN_BRANCH}")
+    if getattr(a, "publish", False) and out:
+        import zephyr_publish  # sibling module
+        report_url = (_build(build_id) or {}).get("logReportUrl", "") or ""
+        cycle = a.cycle or f"Nightly Regression {datetime.now():%Y-%m-%d}"
+        zephyr_publish.publish(out, cycle, report_url, str(build_id),
+                               jira_version_id=getattr(a, "jira_version_id", None) or None)
     return 1 if state in FAIL else 0
 
 
@@ -275,6 +282,30 @@ def cmd_fetch(a) -> int:
 
 def cmd_parse(a) -> int:
     return 0 if summarize(Path(a.path)) else 1
+
+
+def cmd_publish(a) -> int:
+    """Publish a run's results to Zephyr Scale. Either --build <id> (download the finished
+    build's output.xml + report URL from CRT) or --results <output.xml> (local file)."""
+    import zephyr_publish  # sibling module, stdlib-only
+    report_url, build_id = a.report_url or "", a.build or ""
+    if a.build:
+        _require("BASE_URL", "PAT", "PROJECT", "JOB")
+        out = _download_output(a.build)
+        if not out:
+            print("! could not download output.xml for build", a.build)
+            return 1
+        if not report_url:
+            report_url = (_build(a.build) or {}).get("logReportUrl", "") or ""
+    elif a.results:
+        out = Path(a.results)
+    else:
+        print("! provide --build <id> or --results <output.xml>")
+        return 1
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    cycle = a.cycle or f"CRT Automated Regression {stamp}"
+    return zephyr_publish.publish(out, cycle, report_url, build_id, a.dry_run,
+                                  jira_version_id=getattr(a, "jira_version_id", None) or None)
 
 
 def cmd_lint(a) -> int:
@@ -344,19 +375,31 @@ def main(argv=None) -> int:
     p_t = sub.add_parser("trigger", help="start a build, print run id")
     p_t.add_argument("--branch", help="switch the job to this git branch before triggering (NOT restored)")
     p_s = sub.add_parser("status", help="print build state"); p_s.add_argument("build_id")
-    p_r = sub.add_parser("run", help="trigger -> poll -> fetch output.xml -> summarize")
+    p_r = sub.add_parser("run", help="trigger -> poll -> fetch output.xml -> summarize [-> publish]")
     p_r.add_argument("--branch", help="run this git branch (e.g. dev for isolated in-development "
                      "suites); the job is restored to the stable branch afterwards")
+    p_r.add_argument("--publish", action="store_true",
+                     help="after the run, publish results to Zephyr Scale (for nightly schedules)")
+    p_r.add_argument("--cycle", help="Zephyr cycle name when --publish (default: 'Nightly Regression <date>')")
+    p_r.add_argument("--jira-version-id", help="Jira version id to link the cycle to when --publish")
     p_b = sub.add_parser("set-branch", help="point the job at a git branch and exit")
     p_b.add_argument("branch")
     p_f = sub.add_parser("fetch", help="download+summarize an existing build"); p_f.add_argument("build_id")
     p_p = sub.add_parser("parse", help="summarize a local output.xml"); p_p.add_argument("path")
     p_l = sub.add_parser("lint", help="parse .robot/.resource files locally, report syntax errors")
     p_l.add_argument("path", nargs="?", help="file or directory (default: service/)")
+    p_z = sub.add_parser("publish", help="publish results to Zephyr Scale (build or local output.xml)")
+    p_z.add_argument("--build", help="CRT build id to download + publish")
+    p_z.add_argument("--results", help="path to a local Robot output.xml")
+    p_z.add_argument("--cycle", help="Zephyr test cycle name (default: timestamped)")
+    p_z.add_argument("--report-url", help="CRT report URL to attach (auto-filled from --build)")
+    p_z.add_argument("--jira-version-id", help="Jira release/version id to link the cycle to")
+    p_z.add_argument("--dry-run", action="store_true", help="parse + print, post nothing")
     args = ap.parse_args(argv)
     return {
         "discover": cmd_discover, "trigger": lambda a: (cmd_trigger(a), 0)[1],
         "status": cmd_status, "run": cmd_run, "fetch": cmd_fetch, "parse": cmd_parse, "lint": cmd_lint,
+        "publish": cmd_publish,
         "set-branch": lambda a: (_require("BASE_URL", "PAT", "PROJECT", "JOB"),
                                  _set_job_branch(a.branch), 0)[2],
     }[args.cmd](args)
