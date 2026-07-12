@@ -246,6 +246,7 @@ def _poll(build_id) -> str:
 def cmd_run(a) -> int:
     build_id = cmd_trigger(a)
     state = ""
+    out = None
     try:
         state = _poll(build_id)
         out = _download_output(build_id)
@@ -264,6 +265,12 @@ def cmd_run(a) -> int:
             else:
                 print(f"! build {build_id} is still {current or 'pending'} — leaving the job on "
                       f"branch {a.branch!r}. Restore later with: run_suite.py set-branch {MAIN_BRANCH}")
+    if getattr(a, "publish", False) and out:
+        import zephyr_publish  # sibling module
+        report_url = (_build(build_id) or {}).get("logReportUrl", "") or ""
+        cycle = a.cycle or f"Nightly Regression {datetime.now():%Y-%m-%d}"
+        zephyr_publish.publish(out, cycle, report_url, str(build_id),
+                               jira_version_id=getattr(a, "jira_version_id", None) or None)
     return 1 if state in FAIL else 0
 
 
@@ -368,9 +375,13 @@ def main(argv=None) -> int:
     p_t = sub.add_parser("trigger", help="start a build, print run id")
     p_t.add_argument("--branch", help="switch the job to this git branch before triggering (NOT restored)")
     p_s = sub.add_parser("status", help="print build state"); p_s.add_argument("build_id")
-    p_r = sub.add_parser("run", help="trigger -> poll -> fetch output.xml -> summarize")
+    p_r = sub.add_parser("run", help="trigger -> poll -> fetch output.xml -> summarize [-> publish]")
     p_r.add_argument("--branch", help="run this git branch (e.g. dev for isolated in-development "
                      "suites); the job is restored to the stable branch afterwards")
+    p_r.add_argument("--publish", action="store_true",
+                     help="after the run, publish results to Zephyr Scale (for nightly schedules)")
+    p_r.add_argument("--cycle", help="Zephyr cycle name when --publish (default: 'Nightly Regression <date>')")
+    p_r.add_argument("--jira-version-id", help="Jira version id to link the cycle to when --publish")
     p_b = sub.add_parser("set-branch", help="point the job at a git branch and exit")
     p_b.add_argument("branch")
     p_f = sub.add_parser("fetch", help="download+summarize an existing build"); p_f.add_argument("build_id")
