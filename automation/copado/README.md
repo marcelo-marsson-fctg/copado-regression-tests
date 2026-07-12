@@ -18,19 +18,21 @@ deployment quality gate. The full suite takes ~3h, so a 01:00 start finishes ~04
 
 ## Scheduling — Copado scheduled Function (chosen)
 
-A single **Copado Function** runs `nightly_regression.sh` on a **nightly 01:00 schedule**.
-Copado Functions have no execution-time limit here, so the one Function triggers the CRT run,
-waits ~3h for it to finish, and publishes — self-contained, one moving part.
+A single **Copado Function** runs on a **nightly 01:00 schedule**. Copado Functions have no
+execution-time limit here, so one Function triggers the CRT run, waits ~3h, and publishes —
+self-contained. The Function container starts empty, so its script **clones this repo first**,
+then runs the nightly logic.
 
 | Function field | Value |
 |----------------|-------|
 | **API Name** | `Nightly_CRT_Regression_To_Zephyr` |
-| **Type / Image** | Custom · container with `python3` + `bash` (e.g. `python:3.12-slim`; no pip install) |
-| **Script** | `bash automation/copado/nightly_regression.sh` |
-| **Working dir** | the checked-out `copado-regression-tests` repo (add a `git clone` at the top of the script if your Function doesn't auto-checkout) |
+| **Type / Image** | Custom · container with `python3` + `bash` + `git` (e.g. `python:3.12-slim` + git) |
+| **Script** | the contents of **`automation/copado/copado_function_script.sh`** — it `git clone`s the repo (branch `main`, using `GIT_TOKEN`) and runs `automation/copado/nightly_regression.sh`. |
 | **Schedule** | nightly `0 1 * * *` — via a Copado scheduled Automation / scheduled job that invokes this Function (confirm the exact scheduling UI in your edition) |
 
-Optional inputs: `CYCLE_NAME`, `JIRA_VERSION_ID`, `POLL_TIMEOUT` (default 6h). Secrets below.
+- **No `.copado.env` in the container** — all config is read from the injected env vars (secrets below).
+- `REPO_BRANCH` defaults to `main`, which must contain the scripts → **merge PR #1 first** (or set `REPO_BRANCH=feat/zephyr-integration` to test before merge).
+- Optional inputs: `CYCLE_NAME`, `JIRA_VERSION_ID`, `POLL_TIMEOUT` (default 6h), `REPO_SLUG`, `REPO_BRANCH`.
 
 ### Fallback (only if you ever need it)
 Decoupled: use CRT's own **Schedule** on the "Service" job to fire the tests at 01:00, then a
@@ -40,6 +42,7 @@ separate short job at ~04:30 runs `publish_to_zephyr.sh` (publishes the newest *
 
 | Env var | Value |
 |---------|-------|
+| `GIT_TOKEN` | GitHub token with read access to the harness repo (for the clone) |
 | `ZEPHYR_API_KEY` | Zephyr Scale service-account token |
 | `COPADO_PAT` | CRT personal access key (`X-Authorization`) |
 | `COPADO_BASE_URL` | `https://api.au-robotic.copado.com` |
