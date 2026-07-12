@@ -277,6 +277,30 @@ def cmd_parse(a) -> int:
     return 0 if summarize(Path(a.path)) else 1
 
 
+def cmd_publish(a) -> int:
+    """Publish a run's results to Zephyr Scale. Either --build <id> (download the finished
+    build's output.xml + report URL from CRT) or --results <output.xml> (local file)."""
+    import zephyr_publish  # sibling module, stdlib-only
+    report_url, build_id = a.report_url or "", a.build or ""
+    if a.build:
+        _require("BASE_URL", "PAT", "PROJECT", "JOB")
+        out = _download_output(a.build)
+        if not out:
+            print("! could not download output.xml for build", a.build)
+            return 1
+        if not report_url:
+            report_url = (_build(a.build) or {}).get("logReportUrl", "") or ""
+    elif a.results:
+        out = Path(a.results)
+    else:
+        print("! provide --build <id> or --results <output.xml>")
+        return 1
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    cycle = a.cycle or f"CRT Automated Regression {stamp}"
+    return zephyr_publish.publish(out, cycle, report_url, build_id, a.dry_run,
+                                  jira_version_id=getattr(a, "jira_version_id", None) or None)
+
+
 def cmd_lint(a) -> int:
     """Parse .robot/.resource files locally and report syntax errors — catches typos
     before they cost a full CRT cloud round-trip. Needs `pip install robotframework`
@@ -353,10 +377,18 @@ def main(argv=None) -> int:
     p_p = sub.add_parser("parse", help="summarize a local output.xml"); p_p.add_argument("path")
     p_l = sub.add_parser("lint", help="parse .robot/.resource files locally, report syntax errors")
     p_l.add_argument("path", nargs="?", help="file or directory (default: service/)")
+    p_z = sub.add_parser("publish", help="publish results to Zephyr Scale (build or local output.xml)")
+    p_z.add_argument("--build", help="CRT build id to download + publish")
+    p_z.add_argument("--results", help="path to a local Robot output.xml")
+    p_z.add_argument("--cycle", help="Zephyr test cycle name (default: timestamped)")
+    p_z.add_argument("--report-url", help="CRT report URL to attach (auto-filled from --build)")
+    p_z.add_argument("--jira-version-id", help="Jira release/version id to link the cycle to")
+    p_z.add_argument("--dry-run", action="store_true", help="parse + print, post nothing")
     args = ap.parse_args(argv)
     return {
         "discover": cmd_discover, "trigger": lambda a: (cmd_trigger(a), 0)[1],
         "status": cmd_status, "run": cmd_run, "fetch": cmd_fetch, "parse": cmd_parse, "lint": cmd_lint,
+        "publish": cmd_publish,
         "set-branch": lambda a: (_require("BASE_URL", "PAT", "PROJECT", "JOB"),
                                  _set_job_branch(a.branch), 0)[2],
     }[args.cmd](args)

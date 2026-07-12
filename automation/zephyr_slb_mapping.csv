@@ -1,0 +1,89 @@
+tc,slb_key,type,robot_test_name,source_file
+TC_102,SLB-T99,automated,TC_102 Manual Feedback Case Creation Via New Feedback Global Action And Field Mapping,Case.robot
+TC_103,SLB-T100,automated,TC_103 Manual Feedback Case Mandatory Fields And Status Transitions,Case.robot
+TC_104,SLB-T101,automated,TC_104 Manual Feedback Case Creation Page And Record Layout,Case.robot
+TC_105,SLB-T102,automated,TC_105 Emergency Assist Support Case Screen Flow Creation And Field Mapping,EmergencyAssist.robot
+TC_106,SLB-T103,automated,TC_106 Emergency Assist Support Case Closed With Store Action And Write Off,EmergencyAssist.robot
+TC_107,SLB-T104,automated,TC_107 Emergency Assist Closed Without Store Action Or Error Details,EmergencyAssist_TC107.robot
+TC_108,SLB-T105,automated,TC_108 Emergency Assist Manual Booking Details With Store Action And Payment Taken,EmergencyAssist_TC108.robot
+TC_109,SLB-T106,automated,TC_109 Emergency Assist Manual Booking Closed With Store Action Without Error Details,EmergencyAssist_TC109.robot
+TC_110,SLB-T107,automated,TC_110 Emergency Assist Unmatched Booking Awaiting Response With Error And Write Off,EmergencyAssist_TC110.robot
+TC_111,SLB-T108,automated,TC_111 Emergency Assist Unmatched Booking Closed With Error And Write Off,EmergencyAssist_TC111.robot
+TC_112,SLB-T109,automated,TC_112 Emergency Assist Flow And Record Mandatory Field Validations,EmergencyAssist_TC112.robot
+TC_113,SLB-T110,automated,TC_113 Emergency Assist Flow Creation Page And Record Layout,EmergencyAssist_TC113.robot
+TC_114,SLB-T111,automated,TC_114 WCS Service Enquiry Flow Creation And Field Mapping,WcsServiceEnquiry_TC114.robot
+TC_115,SLB-T112,automated,TC_115 WCS Service Enquiry Flow Closed With Error And Write Off,WcsServiceEnquiry_TC115.robot
+TC_116,SLB-T113,automated,TC_116 WCS Service Enquiry Flow Transfer This Call Creates No Case,WcsServiceEnquiry_TC116.robot
+TC_117,SLB-T114,automated,TC_117 WCS Service Enquiry Manual Booking In Progress With Error And Payment,WcsServiceEnquiry_TC117.robot
+TC_118,SLB-T115,automated,TC_118 WCS Service Enquiry Manual Booking Closed Without Error Details,WcsServiceEnquiry_TC118.robot
+TC_119,SLB-T116,automated,TC_119 WCS Service Enquiry Unmatched Booking Awaiting Response Without Error Details,WcsServiceEnquiry_TC119.robot
+TC_120,SLB-T117,automated,TC_120 WCS Service Enquiry Unmatched Booking Closed With Error And Write Off,WcsServiceEnquiry_TC120.robot
+TC_121,SLB-T118,automated,TC_121 WCS Service Enquiry Unmatched Booking Transfer This Call Creates No Case,WcsServiceEnquiry_TC121.robot
+TC_122,SLB-T119,automated,TC_122 WCS Service Enquiry Flow And Record Mandatory Field Validations,WcsServiceEnquiry_TC122.robot
+TC_123,SLB-T120,automated,TC_123 WCS Service Enquiry Flow Creation Page Layout,WcsServiceEnquiry_TC123.robot
+TC_124,SLB-T121,automated,TC_124 WCS General Enquiry Flow Creation And Field Mapping,WcsGeneralEnquiry_TC124.robot
+TC_125,SLB-T122,automated,TC_125 WCS General Enquiry Flow Closed With Store Action,WcsGeneralEnquiry_TC125.robot
+TC_126,SLB-T123,automated,TC_126 WCS General Enquiry Manual Booking In Progress With Store Action,WcsGeneralEnquiry_TC126.robot
+TC_127,SLB-T124,automated,TC_127 WCS General Enquiry Manual Booking Closed Without Store Action,WcsGeneralEnquiry_TC127.robot
+TC_128,SLB-T125,automated,TC_128 WCS General Enquiry Unmatched Booking Awaiting Response Without Store Action,WcsGeneralEnquiry_TC128.robot
+TC_129,SLB-T126,automated,TC_129 WCS General Enquiry Unmatched Booking Closed With Store Action,WcsGeneralEnquiry_TC129.robot
+TC_130,SLB-T127,automated,TC_130 WCS General Enquiry No Booking New With Store Action,WcsGeneralEnquiry_TC130.robot
+TC_131,SLB-T128,automated,TC_131 WCS General Enquiry No Booking Closed Without Store Action,WcsGeneralEnquiry_TC131.robot
+TC_132,SLB-T129,automated,TC_132 WCS General Enquiry Flow And Record Mandatory Field Validations,WcsGeneralEnquiry_TC132.robot
+TC_133,SLB-T130,automated,TC_133 WCS General Enquiry Flow Creation Page Layout,WcsGeneralEnquiry_TC133.robot
+TC_134,SLB-T131,manual,TC_134 Feedback Web Submit Website Complaint Manual,WebToCase.robot
+TC_135,SLB-T132,manual,TC_135 Feedback Web Submit Website Service Request Manual,WebToCase.robot
+TC_136,SLB-T133,manual,TC_136 Feedback Web Submit Website Compliment Manual,WebToCase.robot
+TC_137,SLB-T134,manual,TC_137 Feedback Web Submit No Booking Complaint Manual,WebToCase.robot
+TC_138,SLB-T135,manual,TC_138 Feedback Web Submit No Booking Service Request Manual,WebToCase.robot
+TC_139,SLB-T136,manual,TC_139 Feedback Web Submit No Booking Compliment Manual,WebToCase.robot
+TC_140,SLB-T137,manual,TC_140 Feedback Web Submit Agent Complaint Manual,WebToCase.robot
+TC_141,SLB-T138,manual,TC_141 Feedback Web Submit Agent Service Request Manual,WebToCase.robot
+TC_142,SLB-T139,manual,TC_142 Feedback Web Submit Agent Compliment Manual,WebToCase.robot
+TC_143,SLB-T140,manual,TC_143 Feedback Web Mandatory Fields Manual,WebToCase.robot
+TC_144,SLB-T141,manual,TC_144 Cancel Web Submit And Field Mapping Manual,WebToCase.robot
+TC_145,SLB-T142,manual,TC_145 Cancel Web Mandatory Fields Manual,WebToCase.robot
+TC_146,SLB-T143,manual,TC_146 Email-to-Case Auto-Create From Inbound Email (Manual - placeholder),(manual scope)
+TC_147,SLB-T144,automated,TC_147 Feedback Case Email Status Transitions Full Cycle,EmailStatus.robot
+TC_148,SLB-T145,automated,TC_148 Feedback Case In Progress Email Status Transitions,EmailStatus.robot
+TC_149,SLB-T146,automated,TC_149 Service Enquiry Case Email Status Transitions Full Cycle,EmailStatus.robot
+TC_150,SLB-T147,automated,TC_150 Service Enquiry Case In Progress Email Status Transitions,EmailStatus.robot
+TC_151,SLB-T148,automated,TC_151 Emergency Assist Flow Closed Case Stays Closed,EmailStatus.robot
+TC_152,SLB-T149,automated,TC_152 WCS General Enquiry Flow Closed Case Stays Closed,EmailStatus.robot
+TC_153,SLB-T150,manual,TC_153 Email-to-Case Auto-Create And Case Association (Manual - placeholder),(manual scope)
+TC_154,SLB-T151,automated,TC_154 Emergency Assist Store Action Required Template Rendering And Delivery,CaseEmailTemplates.robot
+TC_155,SLB-T152,automated,TC_155 Emergency Assist FYI Template Rendering And Delivery,CaseEmailTemplates.robot
+TC_156,SLB-T153,automated,TC_156 WCS Store Action Required Template Rendering And Delivery,CaseEmailTemplates.robot
+TC_157,SLB-T154,automated,TC_157 WCS FYI Template Rendering And Delivery,CaseEmailTemplates.robot
+TC_158,SLB-T155,automated,TC_158 Attach Visa And Travel Requirements Australia Template,CaseEmailTemplates.robot
+TC_159,SLB-T156,automated,TC_159 Attach Visa And Travel Requirements New Zealand Template,CaseEmailTemplates.robot
+TC_160,SLB-T157,automated,TC_160 Attach Visa And Travel Requirements Canada Template,CaseEmailTemplates.robot
+TC_161,SLB-T158,automated,TC_161 Feedback Record Type And Case Category Picklists,FeedbackRecord.robot
+TC_162,SLB-T159,automated,TC_162 Feedback Record General Picklists,FeedbackRecord.robot
+TC_163,SLB-T160,automated,TC_163 Feedback Record Status Reason Picklists,FeedbackRecord.robot
+TC_164,SLB-T161,automated,TC_164 Service Enquiry Record Type Category And Subcategory Picklists,ServiceEnquiryRecord.robot
+TC_165,SLB-T162,automated,TC_165 Service Enquiry Record General Picklists,ServiceEnquiryRecord.robot
+TC_166,SLB-T163,automated,TC_166 Service Enquiry Record Status Reason Picklists,ServiceEnquiryRecord.robot
+TC_167,SLB-T164,automated,TC_167 Feedback Web Form Picklist Options,WebToCase.robot
+TC_168,SLB-T165,automated,TC_168 Cancel Web Form Picklist Options,WebToCase.robot
+TC_169,SLB-T166,automated,TC_169 Feedback Record Settlement Section Fields,FeedbackRecord.robot
+TC_170,SLB-T167,automated,TC_170 Service Enquiry Record Has No Settlement Section,ServiceEnquiryRecord.robot
+TC_171,SLB-T168,automated,TC_171 Case Comment Create And Update,FeedbackRecord.robot
+TC_172,SLB-T169,automated,TC_172 Service Manager Can Delete Case Comment,ServiceLeaderPermissions.robot
+TC_173,SLB-T170,automated,TC_173 Sales And Service Agent Case List View Visibility,CaseListViews.robot
+TC_174,SLB-T171,automated,TC_174 Service Manager Can Create Case List View,ServiceLeaderPermissions.robot
+TC_175,SLB-T172,automated,TC_175 Case Ownership Transfer Without Notification,CaseOwnershipTransfer.robot
+TC_176,SLB-T173,automated,TC_176 Case Ownership Transfer With Notification,CaseOwnershipTransfer.robot
+TC_177,SLB-T174,automated,TC_177 Case Field History Tracking,CaseCloseAndHistory.robot
+TC_178,SLB-T175,automated,TC_178 Feedback Sensitive Case Field Visibility Across Personas,CaseSensitiveVisibility.robot
+TC_179,SLB-T176,automated,TC_179 Service Enquiry Sensitive Case Field Visibility Across Personas,CaseSensitiveVisibility.robot
+TC_180,SLB-T177,automated,TC_180 Upload File To Feedback Case,CaseFileUpload.robot
+TC_181,SLB-T178,automated,TC_181 Upload File To Service Enquiry Case,CaseFileUpload.robot
+TC_182,SLB-T179,automated,TC_182 Sales Consultant Creates Activities On Feedback Case,CaseSalesConsultantActivities.robot
+TC_183,SLB-T180,automated,TC_183 Sales Consultant Creates Activities On Service Enquiry Case,CaseSalesConsultantActivities.robot
+TC_184,SLB-T181,automated,TC_184 Create New Task From Feedback Case Feed,CaseFeedActivities.robot
+TC_185,SLB-T182,automated,TC_185 Create New Event From Service Enquiry Case Feed,CaseFeedActivities.robot
+TC_186,SLB-T183,automated,TC_186 Log A Call From Service Enquiry Case Feed,CaseFeedEmailAndCall.robot
+TC_187,SLB-T184,automated,TC_187 Send Email From Service Enquiry Case Feed,CaseFeedEmailAndCall.robot
+TC_188,SLB-T185,automated,TC_188 Close Feedback Case Via Feed Action,CaseCloseAndHistory.robot
+TC_189,SLB-T186,automated,TC_189 Close Service Enquiry Case Via Feed Action,CaseCloseAndHistory.robot
